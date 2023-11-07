@@ -3,7 +3,7 @@ name = "q2-gatk"
 description = ""
 version = "0.0.0"
 authors = []
-# packages = [{include = "q2_bowtie2"}]
+# packages = [{include = "q2_gatk"}]
 
 [tool.poetry.dependencies]
 python = "^3.8.1"

@@ -5,10 +5,10 @@ import qiime2.plugin
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.plugin import Bool, Int, Range, Str
+from qiime2.plugin import Int, Str
 
-from ._format import SamtoolsIndexDirFormat, SamtoolsRegionDirFormat
-from ._type import SamtoolsIndexFormat, SamtoolsRegionFormat
+from ._format import VCFDirFormat, VCFFileFormat
+from ._type import VCFFormat
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -25,8 +25,9 @@ plugin.methods.register_function(
     inputs={"alignment_map": SampleData[AlignmentMap], "reference_fasta": FeatureData[Sequence]},
     parameters={
         "emit_ref_confidence": Str,
+        "ploidy": Int,
     },
-    outputs=[("vcf", SampleData[AlignmentMap])],
+    outputs={"vcf": SampleData[AlignmentMap], "bam": SampleData[AlignmentMap]},
     input_descriptions={
         "alignment_map": "Input should be a bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
         "and cram formats.",
@@ -41,11 +42,13 @@ plugin.methods.register_function(
         "BP_RESOLUTION = Reference model emitted site by site "
         "GVCF = Reference model emitted with condensed non-variant blocks, i.e. the GVCF format "
         "ReferenceConfidenceMode = NONE",
+        "ploidy": "Ploidy (number of chromosomes) per sample. For pooled data, set to (Number of samples in each pool * Sample Ploidy).",
     },
     output_descriptions={
         "vcf": "Either a VCF or GVCF file with raw, unfiltered SNP and indel calls. Regular VCFs must be filtered either by "
         "variant recalibration (Best Practice) or hard-filtering before use in downstream analyses. If using the GVCF workflow, the "
-        "output is a GVCF file that must first be run through GenotypeGVCFs and then filtering before further analysis."
+        "output is a GVCF file that must first be run through GenotypeGVCFs and then filtering before further analysis.",
+        "bam": "File to which assembled haplotypes should be written.",
     },
     name="Call germline SNPs and indels via local re-assembly of haplotypes",
     description=(
@@ -57,7 +60,5 @@ plugin.methods.register_function(
     ),
 )
 
-plugin.register_formats(SamtoolsIndexDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[SamtoolsIndexFormat], artifact_format=SamtoolsIndexDirFormat)
-plugin.register_formats(SamtoolsRegionDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[SamtoolsRegionFormat], artifact_format=SamtoolsRegionDirFormat)
+plugin.register_formats(VCFDirFormat)
+plugin.register_semantic_type_to_format(FeatureData[VCFFormat], artifact_format=VCFDirFormat)

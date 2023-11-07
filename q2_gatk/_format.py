@@ -9,4 +9,4 @@ class VCFFileFormat(model.TextFileFormat):
         pass
 
 
-VCFDirFormat = model.SingleFileDirectoryFormat("VCFDirFormat", VCFFileFormat)
+VCFDirFormat = model.SingleFileDirectoryFormat("VCFDirFormat", "vcf.vcf", VCFFileFormat)
