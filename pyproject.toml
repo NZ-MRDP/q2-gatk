@@ -24,7 +24,7 @@ build-backend = "poetry.core.masonry.api"
 
 #This doesn't seem to work, I think it is a qiime issue though
 [tool.poetry.plugins."qiime2.plugins"]
-"q2-bowtie2" = "q2-bowtie2=q2_bowtie2.plugin_setup:plugin"
+"q2-gatk" = "q2-gatk=q2_gatk.plugin_setup:plugin"
 
 [tool.black]
 line-length = 119
