@@ -11,12 +11,12 @@ from ._format import VCFDirFormat, VCFFileFormat
 def haplotype_caller(
     alignment_map: BAMDirFmt,
     reference_fasta: DNAFASTAFormat,
-    emit_ref_confidences: str = None,
+    emit_ref_confidence: str = None,
     ploidy: int = 2,
-    bam: str = None,
-) -> BAMDirFmt:
+) -> (VCFDirFormat, BAMDirFmt):
     """haplotype_caller."""
     vcf = VCFDirFormat()
+    bam = BAMDirFmt()
     for path, _ in alignment_map.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = [
             "gatk",
@@ -32,7 +32,7 @@ def haplotype_caller(
             "-O",
             os.path.join(str(vcf), str(path.stem) + ".vcf"),
         ]
-        if emit_ref_confidences:
-            cmd.extend(["-ERC", str(emit_ref_confidences)])
+        if emit_ref_confidence:
+            cmd.extend(["-ERC", str(emit_ref_confidence)])
         subprocess.run(cmd, check=True)
-    return vcf
+    return vcf, bam
