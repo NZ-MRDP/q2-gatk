@@ -7,8 +7,8 @@ from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Int, Str
 
-from ._format import VCFDirFormat, VCFFileFormat
-from ._type import VCFFormat
+from ._format import DictDirFormat, DictFileFormat, VCFDirFormat, VCFFileFormat
+from ._type import DictFormat, VCFFormat
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -27,7 +27,7 @@ plugin.methods.register_function(
         "emit_ref_confidence": Str,
         "ploidy": Int,
     },
-    outputs={"vcf": SampleData[AlignmentMap], "bam": SampleData[AlignmentMap]},
+    outputs={"vcf": FeatureData[VCFFormat], "bam": SampleData[AlignmentMap]},
     input_descriptions={
         "alignment_map": "Input should be a bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
         "and cram formats.",
@@ -60,5 +60,27 @@ plugin.methods.register_function(
     ),
 )
 
+plugin.methods.register_function(
+    function=q2_gatk.create_seq_dict,
+    inputs={"reference_fasta": FeatureData[Sequence]},
+    parameters={},
+    outputs={"dict": FeatureData[DictFormat]},
+    input_descriptions={
+        "reference_fasta": ("Reference DNA sequence FASTA"),
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        "dict": "The output SAM file contains a header but no SAMRecords, and the header contains only sequence records.",
+    },
+    name="Call germline SNPs and indels via local re-assembly of haplotypes",
+    description=(
+        "Creates a sequence dictionary for a reference sequence. This tool creates a sequence dictionary file (with .dict extension)"
+        " from a reference sequence provided in FASTA format, which is required by many processing and analysis tools."
+    ),
+)
+
 plugin.register_formats(VCFDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[VCFFormat], artifact_format=VCFDirFormat)
+
+plugin.register_formats(DictDirFormat)
+plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format=DictDirFormat)

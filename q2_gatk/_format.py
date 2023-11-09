@@ -10,3 +10,14 @@ class VCFFileFormat(model.TextFileFormat):
 
 
 VCFDirFormat = model.SingleFileDirectoryFormat("VCFDirFormat", "vcf.vcf", VCFFileFormat)
+
+
+class DictFileFormat(model.TextFileFormat):
+    """DictFileFormat."""
+
+    # TODO: Add validation
+    def _validate_(self, *args):
+        pass
+
+
+DictDirFormat = model.SingleFileDirectoryFormat("DictDirFormat", "fasta.dict", DictFileFormat)
