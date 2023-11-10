@@ -4,6 +4,8 @@ from typing import Union
 
 from q2_types.feature_data._format import DNAFASTAFormat
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
+from qiime2 import Metadata
+from qiime2.plugin import ValidationError
 
 from ._format import DictDirFormat, DictFileFormat, VCFDirFormat, VCFFileFormat
 
@@ -54,3 +56,20 @@ def create_seq_dict(
         ]
         subprocess.run(cmd, check=True)
     return dict
+
+
+# Define the function
+def mark_duplicates(
+    bam: BAMDirFmt,
+) -> (BAMDirFmt, Metadata):
+    """mark_duplicates."""
+    deduplicated_bam = BAMDirFmt()
+    metrics = Metadata
+    for path, _ in alignment_map.bams.iter_views(view_type=BAMFormat):  # type: ignore
+        cmd = ["gatk", "MarkDuplicates", "-I", str(bam), "-M", str(metrics), "-O", str(deduplicated_bam)]
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        raise ValidationError("An error occurred while running GATK MarkDuplicates: %s" % str(e))
+
+    return deduplicated_bam, metrics

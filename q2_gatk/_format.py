@@ -21,3 +21,14 @@ class DictFileFormat(model.TextFileFormat):
 
 
 DictDirFormat = model.SingleFileDirectoryFormat("DictDirFormat", "fasta.dict", DictFileFormat)
+
+
+class MetricsFileFormat(model.TextFileFormat):
+    """MetricsFileFormat."""
+
+    # TODO: Add validation
+    def _validate_(self, *args):
+        pass
+
+
+MetricsDirFormat = model.SingleFileDirectoryFormat("MetricsDirFormat", "metrics.txt", MetricsFileFormat)

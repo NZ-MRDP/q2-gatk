@@ -7,8 +7,8 @@ from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Int, Str
 
-from ._format import DictDirFormat, DictFileFormat, VCFDirFormat, VCFFileFormat
-from ._type import DictFormat, VCFFormat
+from ._format import DictDirFormat, MetricsDirFormat, VCFDirFormat
+from ._type import DictFormat, MetricsFormat, VCFFormat
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -79,8 +79,40 @@ plugin.methods.register_function(
     ),
 )
 
+plugin.methods.register_function(
+    function=q2_gatk.mark_duplicates,
+    inputs={
+        "bam": SampleData[AlignmentMap],
+    },
+    parameters={},
+    outputs=[
+        ("deduplicated_bam", SampleData[AlignmentMap]),
+        ("metrics", FeatureData[MetricsFormat]),
+    ],
+    input_descriptions={
+        "bam": "The input BAM file containing reads to mark duplicates.",
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        "deduplicated_bam": "A new BAM in which duplicates have been identified in the SAM flags field for each read. "
+        "Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024",
+        "metrics": "File indicating the numbers of duplicates for both single- and paired-end reads",
+    },
+    name="Identifies duplicate reads",
+    description="Locates and tags duplicate reads in a BAM file, where duplicate reads are defined as originating from a single fragment"
+    " of DNA. Duplicates can arise during sample preparation e.g. library construction using PCR. Duplicate reads can also result "
+    "from a single amplification cluster, incorrectly detected as multiple clusters by the optical sensor of the sequencing instrument."
+    " These duplication artifacts are referred to as optical duplicates. The MarkDuplicates tool works by comparing sequences in the "
+    "5 prime positions of both reads and read-pairs in a BAM file. After duplicate reads are collected, the tool differentiates the "
+    "primary and duplicate reads using an algorithm that ranks reads by the sums of their base-quality scores (default method). "
+    "Note that this is different from directly checking if the sequences match, which MarkDuplicates does not do.",
+)
+
 plugin.register_formats(VCFDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[VCFFormat], artifact_format=VCFDirFormat)
 
 plugin.register_formats(DictDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format=DictDirFormat)
+
+plugin.register_formats(MetricsDirFormat)
+plugin.register_semantic_type_to_format(FeatureData[MetricsFormat], artifact_format=MetricsDirFormat)
