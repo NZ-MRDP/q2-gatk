@@ -5,7 +5,7 @@ import qiime2.plugin
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.plugin import Int, Str
+from qiime2.plugin import Bool, Int, Str
 
 from ._format import DictDirFormat, MetricsDirFormat, VCFDirFormat
 from ._type import DictFormat, MetricsFormat, VCFFormat
@@ -106,6 +106,43 @@ plugin.methods.register_function(
     "5 prime positions of both reads and read-pairs in a BAM file. After duplicate reads are collected, the tool differentiates the "
     "primary and duplicate reads using an algorithm that ranks reads by the sums of their base-quality scores (default method). "
     "Note that this is different from directly checking if the sequences match, which MarkDuplicates does not do.",
+)
+
+plugin.methods.register_function(
+    function=q2_gatk.add_replace_read_groups,
+    inputs={
+        "input_bam": SampleData[AlignmentMap],
+    },
+    parameters={
+        "sort_order": Str,
+        "create_index": Bool,
+        "library": Str,
+        "platform": Str,
+        "platform_unit": Str,
+        "sample_name": Str,
+    },
+    outputs=[
+        ("sorted_bam", SampleData[AlignmentMap]),
+    ],
+    input_descriptions={
+        "input_bam": "The input BAM file containing reads to mark duplicates.",
+    },
+    parameter_descriptions={
+        "sort_order": "Optional sort order to output in. If not supplied, " "OUTPUT is in the same order as INPUT",
+        "create_index": "Whether to create an index when writing VCF or coordinate sorted BAM output",
+        "library": "Read group library",
+        "platform": "Read group platform (e.g, Illumina, Solid)",
+        "platform_unit": "Read group platform unit (e.g., run barcode)",
+        "sample_name": "Read group sample name",
+    },
+    output_descriptions={
+        "sorted_bam": "A new BAM in which duplicates have been identified in the SAM flags field for each read. "
+        "Duplicates are marked with the hexadecimal value of 0x0400, which corresponds to a decimal value of 1024",
+    },
+    name="Assigns all the reads in a file to a single new read-group",
+    description="Many tools (Picard and GATK for example) require or assume the presence of at least one RG tag, "
+    "defining a read-group to which each read can be assigned (as specified in the RG tag in the SAM record). This tool "
+    "enables the user to assign all the reads in the {@link #INPUT} to a single new read-group.",
 )
 
 plugin.register_formats(VCFDirFormat)

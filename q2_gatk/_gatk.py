@@ -58,14 +58,13 @@ def create_seq_dict(
     return dict
 
 
-# Define the function
 def mark_duplicates(
     bam: BAMDirFmt,
 ) -> (BAMDirFmt, Metadata):
     """mark_duplicates."""
     deduplicated_bam = BAMDirFmt()
     metrics = Metadata
-    for path, _ in alignment_map.bams.iter_views(view_type=BAMFormat):  # type: ignore
+    for path, _ in bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = ["gatk", "MarkDuplicates", "-I", str(bam), "-M", str(metrics), "-O", str(deduplicated_bam)]
     try:
         subprocess.run(cmd, check=True)
@@ -73,3 +72,43 @@ def mark_duplicates(
         raise ValidationError("An error occurred while running GATK MarkDuplicates: %s" % str(e))
 
     return deduplicated_bam, metrics
+
+
+def add_replace_read_groups(
+    input_bam: BAMDirFmt,
+    create_index: bool,
+    library: str = None,
+    platform_unit: str = None,
+    sort_order: str = None,
+    platform: str = None,
+    sample_name: str = None,
+) -> BAMDirFmt:
+    """add_replace_read_groups."""
+    sorted_bam = BAMDirFmt()
+    for path, _ in input_bam.bams.iter_views(view_type=BAMFormat):
+        cmd = [
+            "gatk",
+            "AddOrReplaceReadGroups",
+            "-I",
+            input_bam,
+            "-O",
+            sorted_bam,
+            "-SO",
+            str(sort_order),
+            "--CREATE_INDEX",
+            str(create_index),
+            "-PU",
+            str(platform_unit),
+            "-LB",
+            str(library),
+            "-PL",
+            str(platform),
+            "-SM",
+            str(sample_name),
+        ]
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        raise ValidationError("An error occurred while running GATK AddOrReplaceReadGroups: %s" % str(e))
+
+    return sorted_bam
