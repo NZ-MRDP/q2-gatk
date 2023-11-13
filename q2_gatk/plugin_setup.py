@@ -5,10 +5,11 @@ import qiime2.plugin
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.plugin import Bool, Int, Str
+from qiime2.plugin import Int, Str
 
-from ._format import DictDirFormat, MetricsDirFormat, VCFDirFormat
-from ._type import DictFormat, MetricsFormat, VCFFormat
+from ._format import (BamIndexDirFormat, DictDirFormat, MetricsDirFormat,
+                      VCFDirFormat)
+from ._type import BamIndexFormat, DictFormat, MetricsFormat, VCFFormat
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -81,16 +82,14 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_gatk.mark_duplicates,
-    inputs={
-        "bam": SampleData[AlignmentMap],
-    },
+    inputs={"sorted_bam": SampleData[AlignmentMap]},
     parameters={},
     outputs=[
         ("deduplicated_bam", SampleData[AlignmentMap]),
         ("metrics", FeatureData[MetricsFormat]),
     ],
     input_descriptions={
-        "bam": "The input BAM file containing reads to mark duplicates.",
+        "sorted_bam": "The sorted input BAM file containing reads to mark duplicates.",
     },
     parameter_descriptions={},
     output_descriptions={
@@ -108,14 +107,12 @@ plugin.methods.register_function(
     "Note that this is different from directly checking if the sequences match, which MarkDuplicates does not do.",
 )
 
-plugin.methods.register_function(
-    function=q2_gatk.add_replace_read_groups,
+plugin.methods.register_function(function=q2_gatk.add_replace_read_groups,
     inputs={
         "input_bam": SampleData[AlignmentMap],
     },
     parameters={
         "sort_order": Str,
-        "create_index": Bool,
         "library": Str,
         "platform": Str,
         "platform_unit": Str,
@@ -128,8 +125,8 @@ plugin.methods.register_function(
         "input_bam": "The input BAM file containing reads to mark duplicates.",
     },
     parameter_descriptions={
-        "sort_order": "Optional sort order to output in. If not supplied, " "OUTPUT is in the same order as INPUT",
-        "create_index": "Whether to create an index when writing VCF or coordinate sorted BAM output",
+        "sort_order": "Optional sort order to output in. If not supplied, OUTPUT is in the same order as INPUT. "
+        "Options include unsorted, queryname, coordinate, duplicate, or  unknown",
         "library": "Read group library",
         "platform": "Read group platform (e.g, Illumina, Solid)",
         "platform_unit": "Read group platform unit (e.g., run barcode)",
@@ -145,6 +142,28 @@ plugin.methods.register_function(
     "enables the user to assign all the reads in the {@link #INPUT} to a single new read-group.",
 )
 
+plugin.methods.register_function(
+    function=q2_gatk.build_bam_index,
+    inputs={
+        "coordinate_sorted_bam": SampleData[AlignmentMap],
+    },
+    parameters={},
+    outputs=[
+        ("bam_index", SampleData[AlignmentMap]),
+    ],
+    input_descriptions={
+        "coordinate_sorted_bam": "The input BAM file sorted in coordinate order.",
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        "bam_index": "The BAM index file. Defaults to x.bai if INPUT is x.bam, otherwise INPUT.bai.",
+    },
+    name="Generates a BAM index .bai file.",
+    description="This tool creates an index file for the input BAM that allows fast look-up of data in a BAM file, "
+    "like an index on a database. Note that this tool cannot be run on SAM files, and that the input BAM file must be sorted"
+    " in coordinate order.",
+)
+
 plugin.register_formats(VCFDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[VCFFormat], artifact_format=VCFDirFormat)
 
@@ -153,3 +172,6 @@ plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format
 
 plugin.register_formats(MetricsDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[MetricsFormat], artifact_format=MetricsDirFormat)
+
+plugin.register_formats(BamIndexDirFormat)
+plugin.register_semantic_type_to_format(FeatureData[BamIndexFormat], artifact_format=BamIndexDirFormat)

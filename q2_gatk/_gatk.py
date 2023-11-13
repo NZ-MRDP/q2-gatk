@@ -7,9 +7,12 @@ from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from qiime2 import Metadata
 from qiime2.plugin import ValidationError
 
-from ._format import DictDirFormat, DictFileFormat, VCFDirFormat, VCFFileFormat
+from ._format import (BamIndexDirFormat, BamIndexFileFormat, DictDirFormat,
+                      DictFileFormat, MetricsDirFormat, MetricsFileFormat,
+                      VCFDirFormat, VCFFileFormat)
 
 
+#needs to be tested
 def haplotype_caller(
     alignment_map: BAMDirFmt,
     reference_fasta: DNAFASTAFormat,
@@ -39,33 +42,41 @@ def haplotype_caller(
         subprocess.run(cmd, check=True)
     return vcf, bam
 
-
+#Not working and I do not know why. I think because the input and output are files (not dirs), the file formats are correct here, as are the cmd inputs, but not sure
 def create_seq_dict(
     reference_fasta: DNAFASTAFormat,
-) -> DictDirFormat:
+) -> DictFileFormat:
     """create_seq_dict."""
-    dict = DictDirFormat()
-    for path, _ in reference_fasta.bams.iter_views(view_type=DNAFASTAFormat):  # type: ignore
-        cmd = [
-            "gatk",
-            "CreateSequenceDictionary",
-            "-R",
-            os.path.join(str(reference_fasta.path), str(path.stem) + ".fasta"),
-            "-O",
-            os.path.join(str(dict), str(path.stem) + ".dict"),
+    dict = DictFileFormat()
+    cmd = [
+        "gatk",
+        "CreateSequenceDictionary",
+        "-R",
+        str(reference_fasta),
+        "-O",
+        str(dict),
         ]
-        subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True)
     return dict
 
-
+#working!
 def mark_duplicates(
-    bam: BAMDirFmt,
-) -> (BAMDirFmt, Metadata):
+    sorted_bam: BAMDirFmt,
+) -> (BAMDirFmt, MetricsFileFormat):
     """mark_duplicates."""
     deduplicated_bam = BAMDirFmt()
-    metrics = Metadata
-    for path, _ in bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
-        cmd = ["gatk", "MarkDuplicates", "-I", str(bam), "-M", str(metrics), "-O", str(deduplicated_bam)]
+    metrics = MetricsFileFormat()
+    for path, _ in sorted_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
+        cmd = [
+            "gatk", 
+            "MarkDuplicates", 
+            "-I",
+            os.path.join(str(sorted_bam.path), str(path.stem) + ".bam"),
+            "-M", 
+            str(metrics),
+            "-O", 
+            os.path.join(str(deduplicated_bam), str(path.stem) + ".bam"),
+        ]
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as e:
@@ -73,38 +84,35 @@ def mark_duplicates(
 
     return deduplicated_bam, metrics
 
-
+#working :)
 def add_replace_read_groups(
     input_bam: BAMDirFmt,
-    create_index: bool,
-    library: str = None,
-    platform_unit: str = None,
-    sort_order: str = None,
-    platform: str = None,
-    sample_name: str = None,
+    library: str,
+    platform_unit: str,
+    platform: str,
+    sample_name: str,
+    sort_order: str = None,  # type: ignore
 ) -> BAMDirFmt:
     """add_replace_read_groups."""
     sorted_bam = BAMDirFmt()
-    for path, _ in input_bam.bams.iter_views(view_type=BAMFormat):
+    for path, _ in input_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = [
             "gatk",
             "AddOrReplaceReadGroups",
             "-I",
-            input_bam,
+            os.path.join(str(input_bam.path), str(path.stem) + ".bam"),
             "-O",
-            sorted_bam,
+            os.path.join(str(sorted_bam), str(path.stem) + ".bam"),
             "-SO",
-            str(sort_order),
-            "--CREATE_INDEX",
-            str(create_index),
+            sort_order,
             "-PU",
-            str(platform_unit),
+            platform_unit,
             "-LB",
-            str(library),
+            library,
             "-PL",
-            str(platform),
+            platform,
             "-SM",
-            str(sample_name),
+            sample_name,
         ]
     try:
         subprocess.run(cmd, check=True)
@@ -112,3 +120,27 @@ def add_replace_read_groups(
         raise ValidationError("An error occurred while running GATK AddOrReplaceReadGroups: %s" % str(e))
 
     return sorted_bam
+
+
+# TODO: Add flags if desired
+
+#not working - needs a transformer, which I do not know how to do
+def build_bam_index(
+    coordinate_sorted_bam: BAMDirFmt,
+) -> BamIndexDirFormat: # type: ignore
+    """build_bam_index."""
+    bam_index = BamIndexDirFormat()
+    for path, _ in coordinate_sorted_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
+        cmd = [
+            "gatk",
+            "BuildBamIndex",
+            "-I",
+            os.path.join(str(coordinate_sorted_bam.path), str(path.stem) + ".bam"),
+            "-O",
+            os.path.join(str(bam_index), str(path.stem) + ".bai"),
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            raise ValidationError("An error occurred while running GATK BuildBamIndex: %s" % str(e))
+        return bam_index
