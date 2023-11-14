@@ -149,7 +149,7 @@ plugin.methods.register_function(
     },
     parameters={},
     outputs=[
-        ("bam_index", SampleData[AlignmentMap]),
+        ("bam_index", FeatureData[BamIndexFormat]),
     ],
     input_descriptions={
         "coordinate_sorted_bam": "The input BAM file sorted in coordinate order.",

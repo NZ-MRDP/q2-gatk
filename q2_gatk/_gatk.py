@@ -42,19 +42,19 @@ def haplotype_caller(
         subprocess.run(cmd, check=True)
     return vcf, bam
 
-#Not working and I do not know why. I think because the input and output are files (not dirs), the file formats are correct here, as are the cmd inputs, but not sure
+#Working
 def create_seq_dict(
     reference_fasta: DNAFASTAFormat,
-) -> DictFileFormat:
+) -> DictDirFormat:
     """create_seq_dict."""
-    dict = DictFileFormat()
+    dict = DictDirFormat()
     cmd = [
         "gatk",
         "CreateSequenceDictionary",
         "-R",
         str(reference_fasta),
         "-O",
-        str(dict),
+        os.path.join(str(dict), "fasta.dict"),
         ]
     subprocess.run(cmd, check=True)
     return dict
@@ -123,8 +123,9 @@ def add_replace_read_groups(
 
 
 # TODO: Add flags if desired
+# TODO: test with mulitple files
 
-#not working - needs a transformer, which I do not know how to do
+#working :D
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,
 ) -> BamIndexDirFormat: # type: ignore
@@ -135,12 +136,12 @@ def build_bam_index(
             "gatk",
             "BuildBamIndex",
             "-I",
-            os.path.join(str(coordinate_sorted_bam.path), str(path.stem) + ".bam"),
+            os.path.join(str(coordinate_sorted_bam.path), f"{str(path.stem)}.bam"),
             "-O",
-            os.path.join(str(bam_index), str(path.stem) + ".bai"),
+            os.path.join(str(bam_index), f"{str(path.stem)}.bai"),
         ]
         try:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             raise ValidationError("An error occurred while running GATK BuildBamIndex: %s" % str(e))
-        return bam_index
+    return bam_index
