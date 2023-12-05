@@ -7,4 +7,6 @@ DictFormat = SemanticType("DictFormat", variant_of=FeatureData.field["type"])
 
 MetricsFormat = SemanticType("MetricsFormat", variant_of=FeatureData.field["type"])
 
-BamIndexFormat = SemanticType("BamIndexFormat", variant_of=FeatureData.field["type"])
+#BamIndexFormat = SemanticType("BamIndexFormat", variant_of=FeatureData.field["type"])
+
+BAMIndexAlignmentFormat = SemanticType("BAMIndexAlignmentFormat", variant_of=FeatureData.field["type"])

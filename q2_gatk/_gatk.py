@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import tempfile
 from typing import Union
@@ -10,16 +11,15 @@ from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from qiime2 import Metadata
 from qiime2.plugin import ValidationError
 
-from ._format import (BAMIndexDirFmt, BamIndexFileFormat, DictDirFormat,
-                      DictFileFormat, MetricsDirFormat, MetricsFileFormat,
-                      VCFDirFormat, VCFFileFormat)
+from ._format import (BAMIndexAlignmentDirectoryFormat, BamIndexFileFormat,
+                      DictDirFormat, DictFileFormat, MetricsDirFormat,
+                      MetricsFileFormat, VCFDirFormat, VCFFileFormat)
 
 
 #needs to be tested
 #bam index and bam files need to be matched - do it similar to fasta and fai?
 def haplotype_caller(
-    deduplicated_bam: BAMDirFmt,
-    bam_index: BAMIndexDirFmt,
+    deduplicated_bam: BAMIndexAlignmentDirectoryFormat,
     reference_fasta: SamtoolsIndexSequencesDirectoryFormat,
     emit_ref_confidence: str = None,
     ploidy: int = 2,
@@ -38,7 +38,7 @@ def haplotype_caller(
                 "-ploidy",
                 str(ploidy),
                 "--read-index",
-                os.path.join(str(bam_index), bam_index.path.name + ".bai"),
+                os.path.join(str(deduplicated_bam), deduplicated_bam.path.name + ".bai"),
 #                os.path.join(str(bam_index.path), str(path.stem) + ".bai"),
                 "-bamout",
                 os.path.join(str(realigned_bam), str(path.stem) + ".bam"),
@@ -133,23 +133,27 @@ def add_replace_read_groups(
 # TODO: Add flags if desired
 # TODO: test with mulitple files
 
-#working :D
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,
-) -> BAMIndexDirFmt: # type: ignore
+) -> BAMIndexAlignmentDirectoryFormat: 
     """build_bam_index."""
-    bam_index = BAMIndexDirFmt()
-    for path, _ in coordinate_sorted_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
+    bam_index = BAMIndexAlignmentDirectoryFormat()
+    for path, _ in coordinate_sorted_bam.bams.iter_views(view_type=BAMFormat):
+        bam_path = os.path.join(str(coordinate_sorted_bam), str(path))
         cmd = [
             "gatk",
             "BuildBamIndex",
             "-I",
-            os.path.join(str(coordinate_sorted_bam.path), f"{str(path.stem)}.bam"),
+            bam_path,
             "-O",
-            os.path.join(str(bam_index), f"{str(path.stem)}.bai"),
+            os.path.join(str(bam_index),
+                     os.path.basename(str(path) + ".bai")),
         ]
         try:
             subprocess.run(cmd, check=True)
+            shutil.copyfile(bam_path, 
+                        os.path.join(str(bam_index),
+                                     os.path.basename(bam_path)))
         except subprocess.CalledProcessError as e:
             raise ValidationError("An error occurred while running GATK BuildBamIndex: %s" % str(e))
     return bam_index

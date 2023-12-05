@@ -8,9 +8,10 @@ from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Int, Str
 
-from ._format import (BAMIndexDirFmt, DictDirFormat, MetricsDirFormat,
-                      VCFDirFormat)
-from ._type import BamIndexFormat, DictFormat, MetricsFormat, VCFFormat
+from ._format import (BAMIndexAlignmentDirectoryFormat, DictDirFormat,
+                      MetricsDirFormat, VCFDirFormat)
+from ._type import (BAMIndexAlignmentFormat, DictFormat, MetricsFormat,
+                    VCFFormat)
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -26,7 +27,7 @@ plugin.methods.register_function(
     function=q2_gatk.haplotype_caller,
     inputs={"deduplicated_bam": SampleData[AlignmentMap], 
             "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat],
-            "bam_index": FeatureData[BamIndexFormat]},
+            "bam_index": FeatureData[BAMIndexAlignmentFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
@@ -152,7 +153,7 @@ plugin.methods.register_function(
     },
     parameters={},
     outputs=[
-        ("bam_index", FeatureData[BamIndexFormat]),
+        ("bam_index", FeatureData[BAMIndexAlignmentFormat]),
     ],
     input_descriptions={
         "coordinate_sorted_bam": "The input BAM file sorted in coordinate order.",
@@ -176,5 +177,8 @@ plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format
 plugin.register_formats(MetricsDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[MetricsFormat], artifact_format=MetricsDirFormat)
 
-plugin.register_formats(BAMIndexDirFmt)
-plugin.register_semantic_type_to_format(FeatureData[BamIndexFormat], artifact_format=BAMIndexDirFmt)
+#plugin.register_formats(BamIndexDirFormat)
+#plugin.register_semantic_type_to_format(FeatureData[BamIndexFormat], artifact_format=BamIndexDirFormat)
+
+plugin.register_formats(BAMIndexAlignmentDirectoryFormat)
+plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignmentFormat], artifact_format=BAMIndexAlignmentDirectoryFormat)
