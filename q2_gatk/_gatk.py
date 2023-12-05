@@ -1,46 +1,54 @@
 import os
 import subprocess
+import tempfile
 from typing import Union
 
+from q2_samtools._format import (SamtoolsIndexFileFormat,
+                                 SamtoolsIndexSequencesDirectoryFormat)
 from q2_types.feature_data._format import DNAFASTAFormat
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from qiime2 import Metadata
 from qiime2.plugin import ValidationError
 
-from ._format import (BamIndexDirFormat, BamIndexFileFormat, DictDirFormat,
+from ._format import (BAMIndexDirFmt, BamIndexFileFormat, DictDirFormat,
                       DictFileFormat, MetricsDirFormat, MetricsFileFormat,
                       VCFDirFormat, VCFFileFormat)
 
 
 #needs to be tested
+#bam index and bam files need to be matched - do it similar to fasta and fai?
 def haplotype_caller(
-    alignment_map: BAMDirFmt,
-    reference_fasta: DNAFASTAFormat,
+    deduplicated_bam: BAMDirFmt,
+    bam_index: BAMIndexDirFmt,
+    reference_fasta: SamtoolsIndexSequencesDirectoryFormat,
     emit_ref_confidence: str = None,
     ploidy: int = 2,
 ) -> (VCFDirFormat, BAMDirFmt):
     """haplotype_caller."""
     vcf = VCFDirFormat()
-    bam = BAMDirFmt()
-    for path, _ in alignment_map.bams.iter_views(view_type=BAMFormat):  # type: ignore
-        cmd = [
-            "gatk",
-            "HaplotypeCaller",
-            "-I",
-            os.path.join(str(alignment_map.path), str(path.stem) + ".bam"),
-            "-R",
-            str(reference_fasta),
-            "-ploidy",
-            str(ploidy),
-            "-bamout",
-            os.path.join(str(bam), str(path.stem) + ".bam"),
-            "-O",
-            os.path.join(str(vcf), str(path.stem) + ".vcf"),
-        ]
-        if emit_ref_confidence:
-            cmd.extend(["-ERC", str(emit_ref_confidence)])
-        subprocess.run(cmd, check=True)
-    return vcf, bam
+    realigned_bam = BAMDirFmt()
+    for path, _ in deduplicated_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
+            cmd = [
+                "gatk",
+                "HaplotypeCaller",
+                "-I",
+                os.path.join(str(deduplicated_bam.path), str(path.stem) + ".bam"),
+                "-R",
+                os.path.join(str(reference_fasta), reference_fasta.reference_fasta.name + ".fasta"),
+                "-ploidy",
+                str(ploidy),
+                "--read-index",
+                os.path.join(str(bam_index), bam_index.path.name + ".bai"),
+#                os.path.join(str(bam_index.path), str(path.stem) + ".bai"),
+                "-bamout",
+                os.path.join(str(realigned_bam), str(path.stem) + ".bam"),
+                "-O",
+                os.path.join(str(vcf), str(path.stem) + ".vcf"),
+            ]
+            if emit_ref_confidence:
+                cmd.extend(["-ERC", str(emit_ref_confidence)])
+            subprocess.run(cmd, check=True)
+    return vcf, realigned_bam
 
 #Working
 def create_seq_dict(
@@ -128,9 +136,9 @@ def add_replace_read_groups(
 #working :D
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,
-) -> BamIndexDirFormat: # type: ignore
+) -> BAMIndexDirFmt: # type: ignore
     """build_bam_index."""
-    bam_index = BamIndexDirFormat()
+    bam_index = BAMIndexDirFmt()
     for path, _ in coordinate_sorted_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = [
             "gatk",

@@ -2,12 +2,13 @@
 
 import q2_gatk
 import qiime2.plugin
+from q2_samtools._type import SamtoolsIndexSequencesFormat
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Int, Str
 
-from ._format import (BamIndexDirFormat, DictDirFormat, MetricsDirFormat,
+from ._format import (BAMIndexDirFmt, DictDirFormat, MetricsDirFormat,
                       VCFDirFormat)
 from ._type import BamIndexFormat, DictFormat, MetricsFormat, VCFFormat
 
@@ -23,16 +24,18 @@ plugin = qiime2.plugin.Plugin(
 
 plugin.methods.register_function(
     function=q2_gatk.haplotype_caller,
-    inputs={"alignment_map": SampleData[AlignmentMap], "reference_fasta": FeatureData[Sequence]},
+    inputs={"deduplicated_bam": SampleData[AlignmentMap], 
+            "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat],
+            "bam_index": FeatureData[BamIndexFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
     },
-    outputs={"vcf": FeatureData[VCFFormat], "bam": SampleData[AlignmentMap]},
+    outputs={"vcf": FeatureData[VCFFormat], "realigned_bam": SampleData[AlignmentMap]},
     input_descriptions={
-        "alignment_map": "Input should be a bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
+        "deduplicated_bam": "Input should be a deduplicated bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
         "and cram formats.",
-        "reference_fasta": ("Reference DNA sequence FASTA"),
+        "reference_fasta": ("Reference DNA sequence FASTA. reference_fasta.fasta.fai must be in the same directory."),
     },
     parameter_descriptions={
         "emit_ref_confidence": "The reference confidence mode makes it possible to emit a per-bp or summarized confidence estimate "
@@ -49,7 +52,7 @@ plugin.methods.register_function(
         "vcf": "Either a VCF or GVCF file with raw, unfiltered SNP and indel calls. Regular VCFs must be filtered either by "
         "variant recalibration (Best Practice) or hard-filtering before use in downstream analyses. If using the GVCF workflow, the "
         "output is a GVCF file that must first be run through GenotypeGVCFs and then filtering before further analysis.",
-        "bam": "File to which assembled haplotypes should be written.",
+        "realigned_bam": "File to which assembled haplotypes should be written.",
     },
     name="Call germline SNPs and indels via local re-assembly of haplotypes",
     description=(
@@ -173,5 +176,5 @@ plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format
 plugin.register_formats(MetricsDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[MetricsFormat], artifact_format=MetricsDirFormat)
 
-plugin.register_formats(BamIndexDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[BamIndexFormat], artifact_format=BamIndexDirFormat)
+plugin.register_formats(BAMIndexDirFmt)
+plugin.register_semantic_type_to_format(FeatureData[BamIndexFormat], artifact_format=BAMIndexDirFmt)

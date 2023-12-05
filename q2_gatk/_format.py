@@ -46,10 +46,9 @@ class BamIndexFileFormat(model.TextFileFormat):
     def _validate_(self, *args):
         pass
 
+class BAMIndexDirFmt(model.DirectoryFormat):
+    bais = model.FileCollection(r'.+\.bai', format=BamIndexFileFormat)
 
-class BamIndexDirFormat(model.DirectoryFormat):
-    bam_indices = model.FileCollection(r'.+\.bai', format=BamIndexFileFormat)
-
-    @bam_indices.set_path_maker
-    def bam_indices_path_maker(self, sample_id):
+    @bais.set_path_maker
+    def bais_path_maker(self, sample_id):
         return '%s.bai' % sample_id
