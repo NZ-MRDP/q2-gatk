@@ -87,4 +87,4 @@ class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
     @property
     def bai_file_paths(self):
         bound_collection = model.directory_format.BoundFileCollection(self.bais, self, path_maker=self.bai_path_maker)
-        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFileFormat)])
+        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFileFormat)]

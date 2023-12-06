@@ -39,7 +39,6 @@ def haplotype_caller(
                 str(ploidy),
                 "--read-index",
                 os.path.join(str(deduplicated_bam), deduplicated_bam.path.name + ".bai"),
-#                os.path.join(str(bam_index.path), str(path.stem) + ".bai"),
                 "-bamout",
                 os.path.join(str(realigned_bam), str(path.stem) + ".bam"),
                 "-O",
