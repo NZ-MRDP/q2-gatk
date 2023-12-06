@@ -1,8 +1,10 @@
 import subprocess
+import os
 
 import qiime2.plugin.model as model
 from q2_types_genomics.per_sample_data._format import BAMFormat
 from qiime2.plugin import ValidationError
+from pathlib import Path
 
 
 class VCFFileFormat(model.TextFileFormat):
@@ -57,14 +59,32 @@ class BamIndexFileFormat(model.TextFileFormat):
 #        return '%s.bai' % sample_id
     
 class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
-    bam = model.FileCollection(r".+\.bam?",
+    bams = model.FileCollection(r".+\.bam",
                                     format=BAMFormat)
-    @bam.set_path_maker
+
+    bais = model.FileCollection(r".+\.bai",
+                                     format=BamIndexFileFormat)
+    
+    def _validate(self, *args):
+        for bam, bai in zip(self.bam_file_paths, self.bai_file_paths):
+            if Path(bam).stem != Path(bai).stem:
+                raise ValidationError("""Found mismatches in file names. 
+                                      Bam and bai files must have matching file names before extension""")
+
+    @bams.set_path_maker
     def bam_path_maker(self, sample_id):
         return '%s.bam' % sample_id
     
-    bai = model.FileCollection(r".+\.bai?",
-                                     format=BamIndexFileFormat)
-    @bai.set_path_maker
+    @bais.set_path_maker
     def bai_path_maker(self, sample_id):
         return '%s.bai' % sample_id
+    
+    @property
+    def bam_file_paths(self):
+        bound_collection = model.directory_format.BoundFileCollection(self.bams, self, path_maker=self.bam_path_maker)
+        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BAMFormat)])
+    
+    @property
+    def bai_file_paths(self):
+        bound_collection = model.directory_format.BoundFileCollection(self.bais, self, path_maker=self.bai_path_maker)
+        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFileFormat)])
