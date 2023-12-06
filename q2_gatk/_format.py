@@ -57,14 +57,14 @@ class BamIndexFileFormat(model.TextFileFormat):
 #        return '%s.bai' % sample_id
     
 class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
-    bam = model.FileCollection(r".+\.bam?",
+    bams = model.FileCollection(r".+\.bam",
                                     format=BAMFormat)
-    @bam.set_path_maker
-    def bam_path_maker(self, sample_id):
+    @bams.set_path_maker
+    def bams_path_maker(self, sample_id):
         return '%s.bam' % sample_id
     
-    bai = model.FileCollection(r".+\.bai?",
+    bais = model.FileCollection(r".+\.bai",
                                      format=BamIndexFileFormat)
-    @bai.set_path_maker
-    def bai_path_maker(self, sample_id):
+    @bais.set_path_maker
+    def bais_path_maker(self, sample_id):
         return '%s.bai' % sample_id

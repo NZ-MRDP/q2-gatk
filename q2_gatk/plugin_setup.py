@@ -25,9 +25,8 @@ plugin = qiime2.plugin.Plugin(
 
 plugin.methods.register_function(
     function=q2_gatk.haplotype_caller,
-    inputs={"deduplicated_bam": SampleData[AlignmentMap], 
-            "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat],
-            "bam_index": FeatureData[BAMIndexAlignmentFormat]},
+    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignmentFormat], 
+            "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
