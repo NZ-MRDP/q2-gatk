@@ -1,10 +1,10 @@
-import subprocess
 import os
+import subprocess
+from pathlib import Path
 
 import qiime2.plugin.model as model
 from q2_types_genomics.per_sample_data._format import BAMFormat
 from qiime2.plugin import ValidationError
-from pathlib import Path
 
 
 class VCFFileFormat(model.TextFileFormat):
@@ -28,7 +28,7 @@ class DictFileFormat(model.TextFileFormat):
         pass
 
 
-DictDirFormat = model.SingleFileDirectoryFormat("DictDirFormat", "fasta.dict", DictFileFormat)
+DictDirFormat = model.SingleFileDirectoryFormat("DictDirFormat", "dna-sequences.dict", DictFileFormat)
 
 
 class MetricsFileFormat(model.TextFileFormat):
@@ -48,15 +48,6 @@ class BamIndexFileFormat(model.TextFileFormat):
     # TODO: Add validation
     def _validate_(self, *args):
         pass
-
-#BamIndexDirFormat = model.SingleFileDirectoryFormat("BamIndexDirFormat", r'.+\.bai', BamIndexFileFormat)
-
-#class BAMIndexDirFmt(model.DirectoryFormat):
-#    bais = model.FileCollection(r'.+\.bai', format=BamIndexFileFormat)
-
-#    @bais.set_path_maker
-#    def bais_path_maker(self, sample_id):
-#        return '%s.bai' % sample_id
     
 class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
     bams = model.FileCollection(r".+\.bam",
@@ -87,4 +78,4 @@ class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
     @property
     def bai_file_paths(self):
         bound_collection = model.directory_format.BoundFileCollection(self.bais, self, path_maker=self.bai_path_maker)
-        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFileFormat)]
+        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFileFormat)])

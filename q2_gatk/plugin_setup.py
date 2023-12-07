@@ -176,8 +176,5 @@ plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format
 plugin.register_formats(MetricsDirFormat)
 plugin.register_semantic_type_to_format(FeatureData[MetricsFormat], artifact_format=MetricsDirFormat)
 
-#plugin.register_formats(BamIndexDirFormat)
-#plugin.register_semantic_type_to_format(FeatureData[BamIndexFormat], artifact_format=BamIndexDirFormat)
-
 plugin.register_formats(BAMIndexAlignmentDirectoryFormat)
 plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignmentFormat], artifact_format=BAMIndexAlignmentDirectoryFormat)
