@@ -3,15 +3,14 @@
 import q2_gatk
 import qiime2.plugin
 from q2_samtools._type import SamtoolsIndexSequencesFormat
-from q2_types.feature_data import FeatureData, Sequence
+from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Int, Str
 
-from ._format import (BAMIndexAlignmentDirectoryFormat, DictDirFormat,
-                      MetricsDirFormat, VCFDirFormat)
-from ._type import (BAMIndexAlignmentFormat, DictFormat, MetricsFormat,
-                    VCFFormat)
+from ._format import (BAMIndexAlignmentDirectoryFormat, MetricsDirFormat,
+                      VCFIndexDirectoryFormat)
+from ._type import BAMIndexAlignmentType, MetricsType, VariantType
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -25,13 +24,13 @@ plugin = qiime2.plugin.Plugin(
 
 plugin.methods.register_function(
     function=q2_gatk.haplotype_caller,
-    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignmentFormat], 
+    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignmentType], 
             "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
     },
-    outputs={"vcf": FeatureData[VCFFormat], "realigned_bam": SampleData[AlignmentMap]},
+    outputs={"vcf": FeatureData[VariantType], "realigned_bam": SampleData[AlignmentMap]},
     input_descriptions={
         "deduplicated_bam": "Input should be a deduplicated bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
         "and cram formats.",
@@ -64,32 +63,31 @@ plugin.methods.register_function(
     ),
 )
 
-plugin.methods.register_function(
-    function=q2_gatk.create_seq_dict,
-    inputs={"reference_fasta": FeatureData[Sequence]},
-    parameters={},
-    outputs={"dict": FeatureData[DictFormat]},
-    input_descriptions={
-        "reference_fasta": ("Reference DNA sequence FASTA"),
-    },
-    parameter_descriptions={},
-    output_descriptions={
-        "dict": "The output SAM file contains a header but no SAMRecords, and the header contains only sequence records.",
-    },
-    name="Call germline SNPs and indels via local re-assembly of haplotypes",
-    description=(
-        "Creates a sequence dictionary for a reference sequence. This tool creates a sequence dictionary file (with .dict extension)"
-        " from a reference sequence provided in FASTA format, which is required by many processing and analysis tools."
-    ),
-)
+# plugin.methods.register_function(
+#     function=q2_gatk.create_seq_dict,
+#     inputs={"reference_fasta": FeatureData[Sequence]},
+#     parameters={},
+#     outputs={"dict": FeatureData[DictType]},
+#     input_descriptions={
+#         "reference_fasta": ("Reference DNA sequence FASTA"),
+#     },
+#     parameter_descriptions={},
+#     output_descriptions={
+#         "dict": "The output SAM file contains a header but no SAMRecords, and the header contains only sequence records.",
+#     },
+#     name="Call germline SNPs and indels via local re-assembly of haplotypes",
+#     description=(
+#         "Creates a sequence dictionary for a reference sequence. This tool creates a sequence dictionary file (with .dict extension)"
+#         " from a reference sequence provided in FASTA format, which is required by many processing and analysis tools."
+#     ),
+# )
 
-plugin.methods.register_function(
-    function=q2_gatk.mark_duplicates,
+plugin.methods.register_function(function=q2_gatk.mark_duplicates,
     inputs={"sorted_bam": SampleData[AlignmentMap]},
     parameters={},
     outputs=[
         ("deduplicated_bam", SampleData[AlignmentMap]),
-        ("metrics", FeatureData[MetricsFormat]),
+        ("metrics", FeatureData[MetricsType]),
     ],
     input_descriptions={
         "sorted_bam": "The sorted input BAM file containing reads to mark duplicates.",
@@ -152,7 +150,7 @@ plugin.methods.register_function(
     },
     parameters={},
     outputs=[
-        ("bam_index", FeatureData[BAMIndexAlignmentFormat]),
+        ("bam_index", FeatureData[BAMIndexAlignmentType]),
     ],
     input_descriptions={
         "coordinate_sorted_bam": "The input BAM file sorted in coordinate order.",
@@ -167,14 +165,11 @@ plugin.methods.register_function(
     " in coordinate order.",
 )
 
-plugin.register_formats(VCFDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[VCFFormat], artifact_format=VCFDirFormat)
-
-plugin.register_formats(DictDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[DictFormat], artifact_format=DictDirFormat)
+plugin.register_formats(VCFIndexDirectoryFormat)
+plugin.register_semantic_type_to_format(FeatureData[VariantType], artifact_format=VCFIndexDirectoryFormat)
 
 plugin.register_formats(MetricsDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[MetricsFormat], artifact_format=MetricsDirFormat)
+plugin.register_semantic_type_to_format(FeatureData[MetricsType], artifact_format=MetricsDirFormat)
 
 plugin.register_formats(BAMIndexAlignmentDirectoryFormat)
-plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignmentFormat], artifact_format=BAMIndexAlignmentDirectoryFormat)
+plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignmentType], artifact_format=BAMIndexAlignmentDirectoryFormat)

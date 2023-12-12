@@ -15,20 +15,27 @@ class VCFFileFormat(model.TextFileFormat):
         result = subprocess.run(["gatk", "ValidateVariants", "-V", str(self)])
         if result.returncode != 0:
             raise ValidationError("This is not a valid VCF file.")
-
-
-VCFDirFormat = model.SingleFileDirectoryFormat("VCFDirFormat", "vcf.vcf", VCFFileFormat)
-
-
-class DictFileFormat(model.TextFileFormat):
-    """DictFileFormat."""
+        
+class VCFIndexFileFormat(model.TextFileFormat):
+    """VCFIndexFileFormat."""
 
     # TODO: Add validation
     def _validate_(self, *args):
         pass
 
+class VCFIndexDirectoryFormat(model.DirectoryFormat):
+    vcf = model.FileCollection(r".+\.vcf",
+                                    format=VCFFileFormat)
 
-DictDirFormat = model.SingleFileDirectoryFormat("DictDirFormat", "dna-sequences.dict", DictFileFormat)
+    vcf_index = model.FileCollection(r".+\.vcf.idx",
+                                     format=VCFIndexFileFormat)
+    @vcf.set_path_maker
+    def vcf_path_maker(self, sample_id):
+        return '%s.vcf' % sample_id
+    
+    @vcf_index.set_path_maker
+    def vcf_index_path_maker(self, sample_id):
+        return '%s.vcf.idx' % sample_id
 
 
 class MetricsFileFormat(model.TextFileFormat):

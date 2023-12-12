@@ -13,62 +13,58 @@ from qiime2 import Metadata
 from qiime2.plugin import ValidationError
 
 from ._format import (BAMIndexAlignmentDirectoryFormat, BamIndexFileFormat,
-                      DictDirFormat, DictFileFormat, MetricsDirFormat,
-                      MetricsFileFormat, VCFDirFormat, VCFFileFormat)
+                      MetricsDirFormat, MetricsFileFormat, VCFFileFormat,
+                      VCFIndexDirectoryFormat)
 
 
 #currently being tested
-#need to pass in dict, use with tempfile?
 def haplotype_caller(
     deduplicated_bam: BAMIndexAlignmentDirectoryFormat,
     reference_fasta: SamtoolsIndexSequencesDirectoryFormat,
-    dict: DictFileFormat,
-    emit_ref_confidence: str = None,
+    emit_ref_confidence: str = None, #type: ignore
     ploidy: int = 2,
-) -> (VCFDirFormat, BAMDirFmt):
+) -> (VCFIndexDirectoryFormat, BAMIndexAlignmentDirectoryFormat):
     """haplotype_caller."""
-    vcf = VCFDirFormat()
-    realigned_bam = BAMDirFmt()
-    with tempfile.TemporaryDirectory() as tmpdirname:
-    #what goes here?
+    vcf = VCFIndexDirectoryFormat()
+    realigned_bam = BAMIndexAlignmentDirectoryFormat()
     for file_path in deduplicated_bam.bam_file_paths:
-        cmd = [
-            "gatk",
-            "HaplotypeCaller",
-            "-I",
-            file_path,                
-            "-R",
-            os.path.join(str(reference_fasta), str(reference_fasta.reference_fasta_filepath[0])),            
-            "-ploidy",
-            str(ploidy),                
-            "--read-index",
-            deduplicated_bam.bai_file_paths[0],                
-            "-bamout",
-            os.path.join(str(realigned_bam), ".bam"),                
-            "-O",
-            os.path.join(str(vcf), ".vcf"),
-        ]
-        if emit_ref_confidence:
-            cmd.extend(["-ERC", str(emit_ref_confidence)])
-        subprocess.run(cmd, check=True)
+            cmd = [
+                "gatk",
+                "HaplotypeCaller",
+                "-I",
+                file_path,                
+                "-R",
+                os.path.join(str(reference_fasta), str(reference_fasta.reference_fasta_filepath[0])),            
+                "-ploidy",
+                str(ploidy),                
+                "--read-index",
+                deduplicated_bam.bai_file_paths[0],
+                "-bamout",
+                os.path.join(str(realigned_bam), "bam.bam"),                
+                "-O",
+                os.path.join(str(vcf), "vcf.vcf"),
+            ]
+            if emit_ref_confidence:
+                cmd.extend(["-ERC", str(emit_ref_confidence)])
+            subprocess.run(cmd, check=True)
     return vcf, realigned_bam
 
 #Working
-def create_seq_dict(
-    reference_fasta: DNAFASTAFormat,
-) -> DictDirFormat:
-    """create_seq_dict."""
-    dict = DictDirFormat()
-    cmd = [
-        "gatk",
-        "CreateSequenceDictionary",
-        "-R",
-        str(reference_fasta),
-        "-O",
-        os.path.join(str(dict), "dna-sequences.dict"),
-        ]
-    subprocess.run(cmd, check=True)
-    return dict
+# def create_seq_dict(
+#     reference_fasta: DNAFASTAFormat,
+# ) -> DictDirFormat:
+#     """create_seq_dict."""
+#     dict = DictDirFormat()
+#     cmd = [
+#         "gatk",
+#         "CreateSequenceDictionary",
+#         "-R",
+#         str(reference_fasta),
+#         "-O",
+#         os.path.join(str(dict), "dna-sequences.dict"),
+#         ]
+#     subprocess.run(cmd, check=True)
+#     return dict
 
 #working!
 def mark_duplicates(
