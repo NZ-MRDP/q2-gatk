@@ -8,9 +8,8 @@ from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Int, Str
 
-from ._format import (BAMIndexAlignmentDirectoryFormat, MetricsDirFormat,
-                      VCFIndexDirectoryFormat)
-from ._type import BAMIndexAlignmentType, MetricsType, VariantType
+from ._format import BAMIndexAlignmentDirectory, MetricsDir, VCFIndexDirectory
+from ._type import BAMIndexAlignment, Metrics, Variants
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -23,13 +22,13 @@ plugin = qiime2.plugin.Plugin(
 )
 
 plugin.methods.register_function(function=q2_gatk.haplotype_caller,
-    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignmentType], 
+    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignment], 
             "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
     },
-    outputs={"vcf": FeatureData[VariantType], "realigned_bam": FeatureData[BAMIndexAlignmentType]},
+    outputs={"vcf": FeatureData[Variants], "realigned_bam": FeatureData[BAMIndexAlignment]},
     input_descriptions={
         "deduplicated_bam": "Input should be a deduplicated bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
         "and cram formats.",
@@ -86,7 +85,7 @@ plugin.methods.register_function(function=q2_gatk.mark_duplicates,
     parameters={},
     outputs=[
         ("deduplicated_bam", SampleData[AlignmentMap]),
-        ("metrics", FeatureData[MetricsType]),
+        ("metrics", FeatureData[Metrics]),
     ],
     input_descriptions={
         "sorted_bam": "The sorted input BAM file containing reads to mark duplicates.",
@@ -149,7 +148,7 @@ plugin.methods.register_function(
     },
     parameters={},
     outputs=[
-        ("bam_index", FeatureData[BAMIndexAlignmentType]),
+        ("bam_index", FeatureData[BAMIndexAlignment]),
     ],
     input_descriptions={
         "coordinate_sorted_bam": "The input BAM file sorted in coordinate order.",
@@ -164,11 +163,11 @@ plugin.methods.register_function(
     " in coordinate order.",
 )
 
-plugin.register_formats(VCFIndexDirectoryFormat)
-plugin.register_semantic_type_to_format(FeatureData[VariantType], artifact_format=VCFIndexDirectoryFormat)
+plugin.register_formats(VCFIndexDirectory)
+plugin.register_semantic_type_to_format(FeatureData[Variants], artifact_format=VCFIndexDirectory)
 
-plugin.register_formats(MetricsDirFormat)
-plugin.register_semantic_type_to_format(FeatureData[MetricsType], artifact_format=MetricsDirFormat)
+plugin.register_formats(MetricsDir)
+plugin.register_semantic_type_to_format(FeatureData[Metrics], artifact_format=MetricsDir)
 
-plugin.register_formats(BAMIndexAlignmentDirectoryFormat)
-plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignmentType], artifact_format=BAMIndexAlignmentDirectoryFormat)
+plugin.register_formats(BAMIndexAlignmentDirectory)
+plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignment], artifact_format=BAMIndexAlignmentDirectory)

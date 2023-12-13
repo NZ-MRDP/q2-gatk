@@ -7,8 +7,8 @@ from q2_types_genomics.per_sample_data._format import BAMFormat
 from qiime2.plugin import ValidationError
 
 
-class VCFFileFormat(model.TextFileFormat):
-    """VCFFileFormat."""
+class VCFFile(model.TextFileFormat):
+    """VCFFile."""
 
     # TODO: Test validation by qiime tools import a VCF file
     def _validate_(self, *args):
@@ -16,19 +16,19 @@ class VCFFileFormat(model.TextFileFormat):
         if result.returncode != 0:
             raise ValidationError("This is not a valid VCF file.")
         
-class VCFIndexFileFormat(model.TextFileFormat):
-    """VCFIndexFileFormat."""
+class VCFIndexFile(model.TextFileFormat):
+    """VCFIndexFile."""
 
     # TODO: Add validation
     def _validate_(self, *args):
         pass
 
-class VCFIndexDirectoryFormat(model.DirectoryFormat):
+class VCFIndexDirectory(model.DirectoryFormat):
     vcf = model.FileCollection(r".+\.vcf",
-                                    format=VCFFileFormat)
+                                    format=VCFFile)
 
     vcf_index = model.FileCollection(r".+\.vcf.idx",
-                                     format=VCFIndexFileFormat)
+                                     format=VCFIndexFile)
     @vcf.set_path_maker
     def vcf_path_maker(self, sample_id):
         return '%s.vcf' % sample_id
@@ -38,30 +38,30 @@ class VCFIndexDirectoryFormat(model.DirectoryFormat):
         return '%s.vcf.idx' % sample_id
 
 
-class MetricsFileFormat(model.TextFileFormat):
-    """MetricsFileFormat."""
+class MetricsFile(model.TextFileFormat):
+    """MetricsFile."""
 
     # TODO: Add validation
     def _validate_(self, *args):
         pass
 
 
-MetricsDirFormat = model.SingleFileDirectoryFormat("MetricsDirFormat", "metrics.txt", MetricsFileFormat)
+MetricsDir = model.SingleFileDirectoryFormat("MetricsDir", "metrics.txt", MetricsFile)
 
 
-class BamIndexFileFormat(model.TextFileFormat):
-    """BamIndexFileFormat."""
+class BamIndexFile(model.TextFileFormat):
+    """BamIndexFile."""
 
     # TODO: Add validation
     def _validate_(self, *args):
         pass
     
-class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
+class BAMIndexAlignmentDirectory(model.DirectoryFormat):
     bams = model.FileCollection(r".+\.bam",
                                     format=BAMFormat)
 
     bais = model.FileCollection(r".+\.bai",
-                                     format=BamIndexFileFormat)
+                                     format=BamIndexFile)
     
     def _validate(self, *args):
         for bam, bai in zip(self.bam_file_paths, self.bai_file_paths):
@@ -85,4 +85,4 @@ class BAMIndexAlignmentDirectoryFormat(model.DirectoryFormat):
     @property
     def bai_file_paths(self):
         bound_collection = model.directory_format.BoundFileCollection(self.bais, self, path_maker=self.bai_path_maker)
-        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFileFormat)])
+        return sorted([os.path.join(str(self.path), path) for path, _ in bound_collection.iter_views(view_type=BamIndexFile)])
