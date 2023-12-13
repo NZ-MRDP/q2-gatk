@@ -22,15 +22,14 @@ plugin = qiime2.plugin.Plugin(
     citation_text=("https://genome.cshlp.org/content/20/9/1297"),
 )
 
-plugin.methods.register_function(
-    function=q2_gatk.haplotype_caller,
+plugin.methods.register_function(function=q2_gatk.haplotype_caller,
     inputs={"deduplicated_bam": FeatureData[BAMIndexAlignmentType], 
             "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
     },
-    outputs={"vcf": FeatureData[VariantType], "realigned_bam": SampleData[AlignmentMap]},
+    outputs={"vcf": FeatureData[VariantType], "realigned_bam": FeatureData[BAMIndexAlignmentType]},
     input_descriptions={
         "deduplicated_bam": "Input should be a deduplicated bam file imported as a qza. A separate q2 plugin is planned to convert between bam, sam, "
         "and cram formats.",

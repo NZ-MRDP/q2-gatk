@@ -109,7 +109,7 @@ def add_replace_read_groups(
             "-I",
             os.path.join(str(input_bam.path), str(path.stem) + ".bam"),
             "-O",
-            os.path.join(str(sorted_bam), str(path.stem) + ".bam"),
+            os.path.join(str(sorted_bam), "bam.bam"),
             "-SO",
             sort_order,
             "-PU",
@@ -121,10 +121,11 @@ def add_replace_read_groups(
             "-SM",
             sample_name,
         ]
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError as e:
-        raise ValidationError("An error occurred while running GATK AddOrReplaceReadGroups: %s" % str(e))
+        print(cmd)
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            raise ValidationError("An error occurred while running GATK AddOrReplaceReadGroups: %s" % str(e))
 
     return sorted_bam
 
