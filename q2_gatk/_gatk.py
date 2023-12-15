@@ -12,21 +12,20 @@ from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from qiime2 import Metadata
 from qiime2.plugin import ValidationError
 
-from ._format import (BAMIndexAlignmentDirectoryFormat, BamIndexFileFormat,
-                      MetricsDirFormat, MetricsFileFormat, VCFFileFormat,
-                      VCFIndexDirectoryFormat)
+from ._format import (BAMIndexAlignmentDirectory, BamIndexFile, MetricsDir,
+                      MetricsFile, VCFFile, VCFIndexDirectory)
 
 
 #currently being tested
 def haplotype_caller(
-    deduplicated_bam: BAMIndexAlignmentDirectoryFormat,
+    deduplicated_bam: BAMIndexAlignmentDirectory,
     reference_fasta: SamtoolsIndexSequencesDirectoryFormat,
     emit_ref_confidence: str = None, #type: ignore
     ploidy: int = 2,
-) -> (VCFIndexDirectoryFormat, BAMIndexAlignmentDirectoryFormat):
+) -> (VCFIndexDirectory, BAMIndexAlignmentDirectory):
     """haplotype_caller."""
-    vcf = VCFIndexDirectoryFormat()
-    realigned_bam = BAMIndexAlignmentDirectoryFormat()
+    vcf = VCFIndexDirectory()
+    realigned_bam = BAMIndexAlignmentDirectory()
     for file_path in deduplicated_bam.bam_file_paths:
             cmd = [
                 "gatk",
@@ -69,10 +68,10 @@ def haplotype_caller(
 #working!
 def mark_duplicates(
     sorted_bam: BAMDirFmt,
-) -> (BAMDirFmt, MetricsFileFormat):
+) -> (BAMDirFmt, MetricsFile):
     """mark_duplicates."""
     deduplicated_bam = BAMDirFmt()
-    metrics = MetricsFileFormat()
+    metrics = MetricsFile()
     for path, _ in sorted_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = [
             "gatk", 
@@ -135,9 +134,9 @@ def add_replace_read_groups(
 
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,
-) -> BAMIndexAlignmentDirectoryFormat: 
+) -> BAMIndexAlignmentDirectory: 
     """build_bam_index."""
-    bam_index = BAMIndexAlignmentDirectoryFormat()
+    bam_index = BAMIndexAlignmentDirectory()
     for path, _ in coordinate_sorted_bam.bams.iter_views(view_type=BAMFormat):
         bam_path = os.path.join(str(coordinate_sorted_bam), str(path))
         cmd = [
