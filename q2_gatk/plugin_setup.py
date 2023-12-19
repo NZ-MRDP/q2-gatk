@@ -6,8 +6,8 @@ from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from q2_types_variant import (BAMIndexAlignment, BAMIndexAlignmentDirectory,
-                              Metrics, MetricsDir, SamtoolsIndexFileFormat,
-                              Variants, VCFIndexDirectory)
+                              Metrics, MetricsDir, SamtoolsIndexFile, Variants,
+                              VCFIndexDirectory)
 from qiime2.plugin import Int, Str
 
 plugin = qiime2.plugin.Plugin(
@@ -22,7 +22,7 @@ plugin = qiime2.plugin.Plugin(
 
 plugin.methods.register_function(function=q2_gatk.haplotype_caller,
     inputs={"deduplicated_bam": FeatureData[BAMIndexAlignment], 
-            "reference_fasta": FeatureData[SamtoolsIndexFileFormat]},
+            "reference_fasta": FeatureData[SamtoolsIndexFile]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
