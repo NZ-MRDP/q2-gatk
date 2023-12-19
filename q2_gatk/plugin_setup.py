@@ -2,6 +2,7 @@
 
 import q2_gatk
 import qiime2.plugin
+from q2_types_variant
 from q2_samtools._type import SamtoolsIndexSequencesFormat
 from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
@@ -17,7 +18,7 @@ plugin = qiime2.plugin.Plugin(
     description="QIIME 2 plugin for gatk",
     website="https://gatk.broadinstitute.org/hc/en-us",
     package="q2_gatk",
-    user_support_text=("I'm sorry you're having problems"),
+    user_support_text=("exiI'm sorry you're having problems"),
     citation_text=("https://genome.cshlp.org/content/20/9/1297"),
 )
 

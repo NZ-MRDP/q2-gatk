@@ -5,10 +5,10 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from q2_samtools._format import (SamtoolsIndexFileFormat,
-                                 SamtoolsIndexSequencesDirectoryFormat)
 from q2_types.feature_data._format import DNAFASTAFormat
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
+from q2_types_variant import (SamtoolsIndexFileFormat,
+                              SamtoolsIndexSequencesDirectoryFormat)
 from qiime2 import Metadata
 from qiime2.plugin import ValidationError
 
