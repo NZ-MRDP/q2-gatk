@@ -1,14 +1,13 @@
 """QIIME 2 plugin for gatk."""
 
-import q2_gatk
 import qiime2.plugin
 from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from q2_types_variant import (BAMIndexAlignment, BAMIndexAlignmentDirectory,
-                              Metrics, MetricsDir, SamtoolsIndexFile, Variants,
-                              VCFIndexDirectory)
+from q2_types_variant import BAMIndexAlignment, Metrics, SequenceIndex, Variants
 from qiime2.plugin import Int, Str
+
+import q2_gatk
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -16,13 +15,13 @@ plugin = qiime2.plugin.Plugin(
     description="QIIME 2 plugin for gatk",
     website="https://gatk.broadinstitute.org/hc/en-us",
     package="q2_gatk",
-    user_support_text=("exiI'm sorry you're having problems"),
+    user_support_text=("I'm sorry you're having problems"),
     citation_text=("https://genome.cshlp.org/content/20/9/1297"),
 )
 
-plugin.methods.register_function(function=q2_gatk.haplotype_caller,
-    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignment], 
-            "reference_fasta": FeatureData[SamtoolsIndexFile]},
+plugin.methods.register_function(
+    function=q2_gatk.haplotype_caller,
+    inputs={"deduplicated_bam": FeatureData[BAMIndexAlignment], "reference_fasta": FeatureData[SequenceIndex]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
@@ -79,7 +78,8 @@ plugin.methods.register_function(function=q2_gatk.haplotype_caller,
 #     ),
 # )
 
-plugin.methods.register_function(function=q2_gatk.mark_duplicates,
+plugin.methods.register_function(
+    function=q2_gatk.mark_duplicates,
     inputs={"sorted_bam": SampleData[AlignmentMap]},
     parameters={},
     outputs=[
@@ -105,7 +105,8 @@ plugin.methods.register_function(function=q2_gatk.mark_duplicates,
     "Note that this is different from directly checking if the sequences match, which MarkDuplicates does not do.",
 )
 
-plugin.methods.register_function(function=q2_gatk.add_replace_read_groups,
+plugin.methods.register_function(
+    function=q2_gatk.add_replace_read_groups,
     inputs={
         "input_bam": SampleData[AlignmentMap],
     },
@@ -161,5 +162,3 @@ plugin.methods.register_function(
     "like an index on a database. Note that this tool cannot be run on SAM files, and that the input BAM file must be sorted"
     " in coordinate order.",
 )
-
-
