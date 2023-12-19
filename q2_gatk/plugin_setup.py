@@ -2,14 +2,13 @@
 
 import q2_gatk
 import qiime2.plugin
-from q2_samtools._type import SamtoolsIndexSequencesFormat
 from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
+from q2_types_variant import (BAMIndexAlignment, BAMIndexAlignmentDirectory,
+                              Metrics, MetricsDir, SamtoolsIndexFileFormat,
+                              Variants, VCFIndexDirectory)
 from qiime2.plugin import Int, Str
-
-from ._format import BAMIndexAlignmentDirectory, MetricsDir, VCFIndexDirectory
-from ._type import BAMIndexAlignment, Metrics, Variants
 
 plugin = qiime2.plugin.Plugin(
     name="gatk",
@@ -23,7 +22,7 @@ plugin = qiime2.plugin.Plugin(
 
 plugin.methods.register_function(function=q2_gatk.haplotype_caller,
     inputs={"deduplicated_bam": FeatureData[BAMIndexAlignment], 
-            "reference_fasta": FeatureData[SamtoolsIndexSequencesFormat]},
+            "reference_fasta": FeatureData[SamtoolsIndexFileFormat]},
     parameters={
         "emit_ref_confidence": Str,
         "ploidy": Int,
@@ -163,11 +162,4 @@ plugin.methods.register_function(
     " in coordinate order.",
 )
 
-plugin.register_formats(VCFIndexDirectory)
-plugin.register_semantic_type_to_format(FeatureData[Variants], artifact_format=VCFIndexDirectory)
 
-plugin.register_formats(MetricsDir)
-plugin.register_semantic_type_to_format(FeatureData[Metrics], artifact_format=MetricsDir)
-
-plugin.register_formats(BAMIndexAlignmentDirectory)
-plugin.register_semantic_type_to_format(FeatureData[BAMIndexAlignment], artifact_format=BAMIndexAlignmentDirectory)
