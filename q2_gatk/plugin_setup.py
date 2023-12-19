@@ -2,7 +2,6 @@
 
 import q2_gatk
 import qiime2.plugin
-from q2_types_variant
 from q2_samtools._type import SamtoolsIndexSequencesFormat
 from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
