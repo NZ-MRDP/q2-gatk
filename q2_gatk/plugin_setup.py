@@ -9,9 +9,11 @@ from qiime2.plugin import Int, Str
 
 import q2_gatk
 
+from . import __version__
+
 plugin = qiime2.plugin.Plugin(
     name="gatk",
-    version="0.0.0",
+    version=__version__,
     description="QIIME 2 plugin for gatk",
     website="https://gatk.broadinstitute.org/hc/en-us",
     package="q2_gatk",
