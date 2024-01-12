@@ -4,12 +4,9 @@ import subprocess
 from pathlib import Path
 
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
-from q2_types_variant import (
-    BAMIndexAlignmentDirectory,
-    MetricsFile,
-    SamtoolsIndexSequencesDirectoryFormat,
-    VCFIndexDirectory,
-)
+from q2_types_variant import (BAMIndexAlignmentDirectory, MetricsFile,
+                              SamtoolsIndexSequencesDirectoryFormat,
+                              VCFIndexDirectory)
 from qiime2.plugin import ValidationError
 
 
@@ -96,7 +93,6 @@ def add_replace_read_groups(
     library: str,
     platform_unit: str,
     platform: str,
-    sample_name: str,
     sort_order: str = None,  # type: ignore
 ) -> BAMDirFmt:
     """add_replace_read_groups."""
@@ -108,7 +104,7 @@ def add_replace_read_groups(
             "-I",
             os.path.join(str(input_bam.path), str(path.stem) + ".bam"),
             "-O",
-            os.path.join(str(sorted_bam), "bam.bam"),
+            os.path.join(str(sorted_bam), str(path.stem) + ".bam"),
             "-SO",
             sort_order,
             "-PU",
@@ -118,9 +114,8 @@ def add_replace_read_groups(
             "-PL",
             platform,
             "-SM",
-            sample_name,
+            str(path.stem),
         ]
-        print(cmd)
         try:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
