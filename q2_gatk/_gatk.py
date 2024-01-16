@@ -61,7 +61,7 @@ def haplotype_caller(
 #     return dict
 
 
-# working!
+# test whether function fails if one sample fails by replacing one of the bam files with an invalid file
 def mark_duplicates(
     sorted_bam: BAMDirFmt,
 ) -> (BAMDirFmt, MetricsFile):
@@ -79,10 +79,10 @@ def mark_duplicates(
             "-O",
             os.path.join(str(deduplicated_bam), str(path.stem) + ".bam"),
         ]
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError as e:
-        raise ValidationError("An error occurred while running GATK MarkDuplicates: %s" % str(e))
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            raise ValidationError("An error occurred while running GATK MarkDuplicates: %s" % str(e))
 
     return deduplicated_bam, metrics
 
