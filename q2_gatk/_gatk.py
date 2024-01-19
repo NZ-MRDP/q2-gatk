@@ -1,16 +1,21 @@
 import os
 import shutil
 import subprocess
+from importlib import resources
 from pathlib import Path
 
+from q2_types.feature_data._format import DNAFASTAFormat
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from q2_types_variant import (
     BAMIndexAlignmentDirectory,
+    IndexSequencesDirectoryFormat,
     MetricsFile,
     SamtoolsIndexSequencesDirectoryFormat,
     VCFIndexDirectory,
 )
 from qiime2.plugin import ValidationError
+
+from q2_gatk import bin
 
 
 # currently being tested
@@ -156,3 +161,26 @@ def build_bam_index(
         except subprocess.CalledProcessError as e:
             raise ValidationError("An error occurred while running GATK BuildBamIndex: %s" % str(e))
     return bam_index
+
+
+def create_sequence_dictionary(
+    reference_sequences: DNAFASTAFormat, index_sequences: SamtoolsIndexSequencesDirectoryFormat
+) -> IndexSequencesDirectoryFormat:
+    """create_sequence_dictionary."""
+    result = IndexSequencesDirectoryFormat()
+    with resources.path(bin, "gatk-package-4.5.0.0-local.jar") as executable_path:
+        cmd = [
+            "java",
+            "-jar",
+            executable_path,
+            "CreateSequenceDictionary",
+            "-R",
+            str(reference_sequences),
+            "-O",
+            os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
+        ]
+        subprocess.run(cmd, check=True)
+
+    shutil.copytree(str(index_sequences), str(result), dirs_exist_ok=True)
+
+    return result

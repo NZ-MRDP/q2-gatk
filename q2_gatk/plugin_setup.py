@@ -1,10 +1,17 @@
 """QIIME 2 plugin for gatk."""
 
 import qiime2.plugin
-from q2_types.feature_data import FeatureData
+from q2_types.feature_data import FeatureData, Sequence
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from q2_types_variant import BAMIndexAlignment, Metrics, SequenceIndex, Variants
+from q2_types_variant import (
+    BAMIndexAlignment,
+    GenBankSequence,
+    Metrics,
+    SequenceIndex,
+    SequenceIndexWithDict,
+    Variants,
+)
 from qiime2.plugin import Int, Str
 
 import q2_gatk
@@ -163,4 +170,24 @@ plugin.methods.register_function(
     description="This tool creates an index file for the input BAM that allows fast look-up of data in a BAM file, "
     "like an index on a database. Note that this tool cannot be run on SAM files, and that the input BAM file must be sorted"
     " in coordinate order.",
+)
+
+plugin.methods.register_function(
+    function=q2_gatk.create_sequence_dictionary,
+    inputs={
+        "reference_sequences": FeatureData[Sequence | GenBankSequence],
+        "index_sequences": FeatureData[SequenceIndex],
+    },
+    parameters={},
+    outputs={"result": FeatureData[SequenceIndexWithDict]},
+    input_descriptions={
+        "reference_sequences": "Reference DNA sequence FASTA",
+        "index_sequences": "QZA that includes both reference fasta and reference fasta index as ref.fasta.fai",
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        "result": "QZA that includes reference fasta, reference fasta index, and sequence dictionary"
+    },
+    name="gatk create sequence dictionary",
+    description="Creates a sequence dictionary for a reference sequence.",
 )
