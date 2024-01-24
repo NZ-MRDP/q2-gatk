@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-from importlib import resources
 from pathlib import Path
 
 from q2_types.feature_data._format import DNAFASTAFormat
@@ -14,8 +13,6 @@ from q2_types_variant import (
     VCFIndexDirectory,
 )
 from qiime2.plugin import ValidationError
-
-from q2_gatk import bin
 
 
 # currently being tested
@@ -168,18 +165,15 @@ def create_sequence_dictionary(
 ) -> IndexSequencesDirectoryFormat:
     """create_sequence_dictionary."""
     result = IndexSequencesDirectoryFormat()
-    with resources.path(bin, "gatk-package-4.5.0.0-local.jar") as executable_path:
-        cmd = [
-            "java",
-            "-jar",
-            executable_path,
-            "CreateSequenceDictionary",
-            "-R",
-            str(reference_sequences),
-            "-O",
-            os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
-        ]
-        subprocess.run(cmd, check=True)
+    cmd = [
+        "gatk",
+        "CreateSequenceDictionary",
+        "-R",
+        str(reference_sequences),
+        "-O",
+        os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
+    ]
+    subprocess.run(cmd, check=True)
 
     shutil.copytree(str(index_sequences), str(result), dirs_exist_ok=True)
 
