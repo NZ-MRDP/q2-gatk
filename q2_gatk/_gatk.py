@@ -31,7 +31,7 @@ def haplotype_caller(
             "-I",
             bam,
             "-R",
-            os.path.join(str(reference_fasta), str(reference_fasta.reference_fasta_filepath[0])),
+            reference_fasta.reference_fasta_filepath,
             "-ploidy",
             str(ploidy),
             "--read-index",
@@ -143,11 +143,12 @@ def create_sequence_dictionary(
 ) -> IndexSequencesDirectoryFormat:
     """create_sequence_dictionary."""
     result = IndexSequencesDirectoryFormat()
+
     cmd = [
         "gatk",
         "CreateSequenceDictionary",
         "-R",
-        os.path.join(str(index_sequences), str(index_sequences.reference_fasta_filepath[0])),
+        index_sequences.reference_fasta_filepath,
         "-O",
         os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
     ]
