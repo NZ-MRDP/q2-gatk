@@ -47,6 +47,7 @@ def haplotype_caller(
     return vcf, realigned_bam
 
 
+# test whether function fails if one sample fails by replacing one of the bam files with an invalid file
 def mark_duplicates(
     sorted_bam: BAMDirFmt,
 ) -> (BAMDirFmt, MetricsFile):
