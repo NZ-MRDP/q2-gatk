@@ -25,7 +25,6 @@ def haplotype_caller(
     vcf = VCFIndexDirectory()
     realigned_bam = BAMIndexAlignmentDirectory()
     for bam, bai in zip(deduplicated_bam.bam_file_paths, deduplicated_bam.bai_file_paths):
-
         cmd = [
             "gatk",
             "HaplotypeCaller",
@@ -48,7 +47,6 @@ def haplotype_caller(
     return vcf, realigned_bam
 
 
-# working!
 def mark_duplicates(
     sorted_bam: BAMDirFmt,
 ) -> (BAMDirFmt, MetricsFile):
@@ -112,6 +110,7 @@ def add_replace_read_groups(
 
 
 # TODO: Add flags if desired
+
 
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,
