@@ -24,22 +24,23 @@ def haplotype_caller(
     """haplotype_caller."""
     vcf = VCFIndexDirectory()
     realigned_bam = BAMIndexAlignmentDirectory()
-    for file_path in deduplicated_bam.bam_file_paths:
+    for bam, bai in zip(deduplicated_bam.bam_file_paths, deduplicated_bam.bai_file_paths):
+
         cmd = [
             "gatk",
             "HaplotypeCaller",
             "-I",
-            file_path,
+            bam,
             "-R",
             os.path.join(str(reference_fasta), str(reference_fasta.reference_fasta_filepath[0])),
             "-ploidy",
             str(ploidy),
             "--read-index",
-            deduplicated_bam.bai_file_paths[0],
+            bai,
             "-bamout",
-            os.path.join(str(realigned_bam), "bam.bam"),
+            os.path.join(str(realigned_bam), os.path.basename(bam)),
             "-O",
-            os.path.join(str(vcf), "vcf.vcf"),
+            os.path.join(str(vcf), Path(bam).stem + ".vcf"),
         ]
         if emit_ref_confidence:
             cmd.extend(["-ERC", str(emit_ref_confidence)])
@@ -65,10 +66,10 @@ def mark_duplicates(
             "-O",
             os.path.join(str(deduplicated_bam), str(path.stem) + ".bam"),
         ]
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError as e:
-        raise ValidationError("An error occurred while running GATK MarkDuplicates: %s" % str(e))
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            raise ValidationError("An error occurred while running GATK MarkDuplicates: %s" % str(e))
 
     return deduplicated_bam, metrics
 
@@ -79,7 +80,6 @@ def add_replace_read_groups(
     library: str,
     platform_unit: str,
     platform: str,
-    sample_name: str,
     sort_order: str = None,  # type: ignore
 ) -> BAMDirFmt:
     """add_replace_read_groups."""
@@ -91,7 +91,7 @@ def add_replace_read_groups(
             "-I",
             os.path.join(str(input_bam.path), str(path.stem) + ".bam"),
             "-O",
-            os.path.join(str(sorted_bam), "bam.bam"),
+            os.path.join(str(sorted_bam), str(path.stem) + ".bam"),
             "-SO",
             sort_order,
             "-PU",
@@ -101,9 +101,8 @@ def add_replace_read_groups(
             "-PL",
             platform,
             "-SM",
-            sample_name,
+            str(path.stem),
         ]
-        print(cmd)
         try:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
@@ -113,8 +112,6 @@ def add_replace_read_groups(
 
 
 # TODO: Add flags if desired
-# TODO: test with mulitple files
-
 
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,

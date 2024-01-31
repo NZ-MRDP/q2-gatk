@@ -1,5 +1,6 @@
 """QIIME 2 plugin for gatk."""
 
+import q2_gatk
 import qiime2.plugin
 from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
@@ -12,6 +13,7 @@ from q2_types_variant import (
     Variants,
 )
 from qiime2.plugin import Int, Str
+
 
 import q2_gatk
 
@@ -123,7 +125,6 @@ plugin.methods.register_function(
         "library": Str,
         "platform": Str,
         "platform_unit": Str,
-        "sample_name": Str,
     },
     outputs=[
         ("sorted_bam", SampleData[AlignmentMap]),
@@ -137,7 +138,6 @@ plugin.methods.register_function(
         "library": "Read group library",
         "platform": "Read group platform (e.g, Illumina, Solid)",
         "platform_unit": "Read group platform unit (e.g., run barcode)",
-        "sample_name": "Read group sample name",
     },
     output_descriptions={
         "sorted_bam": "A new BAM in which duplicates have been identified in the SAM flags field for each read. "
