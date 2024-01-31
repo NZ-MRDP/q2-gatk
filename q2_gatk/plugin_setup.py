@@ -1,12 +1,11 @@
 """QIIME 2 plugin for gatk."""
 
 import qiime2.plugin
-from q2_types.feature_data import FeatureData, Sequence
+from q2_types.feature_data import FeatureData
 from q2_types.sample_data import SampleData
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from q2_types_variant import (
     BAMIndexAlignment,
-    GenBankSequence,
     Metrics,
     SequenceIndex,
     SequenceIndexWithDict,
@@ -175,13 +174,11 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_gatk.create_sequence_dictionary,
     inputs={
-        "reference_sequences": FeatureData[Sequence | GenBankSequence],
         "index_sequences": FeatureData[SequenceIndex],
     },
     parameters={},
     outputs={"result": FeatureData[SequenceIndexWithDict]},
     input_descriptions={
-        "reference_sequences": "Reference DNA sequence FASTA",
         "index_sequences": "QZA that includes both reference fasta and reference fasta index as ref.fasta.fai",
     },
     parameter_descriptions={},

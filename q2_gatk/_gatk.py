@@ -3,7 +3,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from q2_types.feature_data._format import DNAFASTAFormat
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from q2_types_variant import (
     BAMIndexAlignmentDirectory,
@@ -46,24 +45,6 @@ def haplotype_caller(
             cmd.extend(["-ERC", str(emit_ref_confidence)])
         subprocess.run(cmd, check=True)
     return vcf, realigned_bam
-
-
-# Working
-# def create_seq_dict(
-#     reference_fasta: DNAFASTAFormat,
-# ) -> DictDirFormat:
-#     """create_seq_dict."""
-#     dict = DictDirFormat()
-#     cmd = [
-#         "gatk",
-#         "CreateSequenceDictionary",
-#         "-R",
-#         str(reference_fasta),
-#         "-O",
-#         os.path.join(str(dict), "dna-sequences.dict"),
-#         ]
-#     subprocess.run(cmd, check=True)
-#     return dict
 
 
 # working!
@@ -161,7 +142,7 @@ def build_bam_index(
 
 
 def create_sequence_dictionary(
-    reference_sequences: DNAFASTAFormat, index_sequences: SamtoolsIndexSequencesDirectoryFormat
+    index_sequences: SamtoolsIndexSequencesDirectoryFormat,
 ) -> IndexSequencesDirectoryFormat:
     """create_sequence_dictionary."""
     result = IndexSequencesDirectoryFormat()
@@ -169,7 +150,7 @@ def create_sequence_dictionary(
         "gatk",
         "CreateSequenceDictionary",
         "-R",
-        str(reference_sequences),
+        os.path.join(str(index_sequences), str(index_sequences.reference_fasta_filepath[0])),
         "-O",
         os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
     ]
