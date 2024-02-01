@@ -4,9 +4,13 @@ import subprocess
 from pathlib import Path
 
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
-from q2_types_variant import (BAMIndexAlignmentDirectory, MetricsFile,
-                              SamtoolsIndexSequencesDirectoryFormat,
-                              VCFIndexDirectory)
+from q2_types_variant import (
+    BAMIndexAlignmentDirectory,
+    IndexSequencesDirectoryFormat,
+    MetricsFile,
+    SamtoolsIndexSequencesDirectoryFormat,
+    VCFIndexDirectory,
+)
 from qiime2.plugin import ValidationError
 
 
@@ -21,14 +25,13 @@ def haplotype_caller(
     vcf = VCFIndexDirectory()
     realigned_bam = BAMIndexAlignmentDirectory()
     for bam, bai in zip(deduplicated_bam.bam_file_paths, deduplicated_bam.bai_file_paths):
-
         cmd = [
             "gatk",
             "HaplotypeCaller",
             "-I",
             bam,
             "-R",
-            os.path.join(str(reference_fasta), str(reference_fasta.reference_fasta_filepath[0])),
+            reference_fasta.reference_fasta_filepath,
             "-ploidy",
             str(ploidy),
             "--read-index",
@@ -42,24 +45,6 @@ def haplotype_caller(
             cmd.extend(["-ERC", str(emit_ref_confidence)])
         subprocess.run(cmd, check=True)
     return vcf, realigned_bam
-
-
-# Working
-# def create_seq_dict(
-#     reference_fasta: DNAFASTAFormat,
-# ) -> DictDirFormat:
-#     """create_seq_dict."""
-#     dict = DictDirFormat()
-#     cmd = [
-#         "gatk",
-#         "CreateSequenceDictionary",
-#         "-R",
-#         str(reference_fasta),
-#         "-O",
-#         os.path.join(str(dict), "dna-sequences.dict"),
-#         ]
-#     subprocess.run(cmd, check=True)
-#     return dict
 
 
 # test whether function fails if one sample fails by replacing one of the bam files with an invalid file
@@ -127,6 +112,7 @@ def add_replace_read_groups(
 
 # TODO: Add flags if desired
 
+
 def build_bam_index(
     coordinate_sorted_bam: BAMDirFmt,
 ) -> BAMIndexAlignmentDirectory:
@@ -150,3 +136,24 @@ def build_bam_index(
         except subprocess.CalledProcessError as e:
             raise ValidationError("An error occurred while running GATK BuildBamIndex: %s" % str(e))
     return bam_index
+
+
+def create_sequence_dictionary(
+    index_sequences: SamtoolsIndexSequencesDirectoryFormat,
+) -> IndexSequencesDirectoryFormat:
+    """create_sequence_dictionary."""
+    result = IndexSequencesDirectoryFormat()
+
+    cmd = [
+        "gatk",
+        "CreateSequenceDictionary",
+        "-R",
+        index_sequences.reference_fasta_filepath,
+        "-O",
+        os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
+    ]
+    subprocess.run(cmd, check=True)
+
+    shutil.copytree(str(index_sequences), str(result), dirs_exist_ok=True)
+
+    return result
