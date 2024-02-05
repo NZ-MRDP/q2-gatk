@@ -1,9 +1,8 @@
 [tool.poetry]
 name = "q2-gatk"
 description = ""
-version = "0.1.4"
+version = "0.0.0"
 authors = []
-# packages = [{include = "q2_gatk"}]
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
