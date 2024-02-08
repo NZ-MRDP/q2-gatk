@@ -31,7 +31,7 @@ def haplotype_caller(
             "-I",
             bam,
             "-R",
-            os.path.join(str(reference_fasta), str(reference_fasta.reference_fasta_filepath[0])),
+            reference_fasta.reference_fasta_filepath,
             "-ploidy",
             str(ploidy),
             "--read-index",
