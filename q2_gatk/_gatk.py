@@ -6,7 +6,6 @@ from pathlib import Path
 from q2_types_genomics.per_sample_data._format import BAMDirFmt, BAMFormat
 from q2_types_variant import (
     BAMIndexAlignmentDirectory,
-    IndexSequencesDirectoryFormat,
     MetricsFile,
     SamtoolsIndexSequencesDirectoryFormat,
     VCFIndexDirectory,
@@ -18,12 +17,13 @@ from qiime2.plugin import ValidationError
 def haplotype_caller(
     deduplicated_bam: BAMIndexAlignmentDirectory,
     reference_fasta: SamtoolsIndexSequencesDirectoryFormat,
-    emit_ref_confidence: str = None,  # type: ignore
+    emit_ref_confidence: str = None,
     ploidy: int = 2,
 ) -> (VCFIndexDirectory, BAMIndexAlignmentDirectory):
     """haplotype_caller."""
     vcf = VCFIndexDirectory()
     realigned_bam = BAMIndexAlignmentDirectory()
+
     for bam, bai in zip(deduplicated_bam.bam_file_paths, deduplicated_bam.bai_file_paths):
         cmd = [
             "gatk",
@@ -41,9 +41,12 @@ def haplotype_caller(
             "-O",
             os.path.join(str(vcf), Path(bam).stem + ".vcf"),
         ]
+
         if emit_ref_confidence:
             cmd.extend(["-ERC", str(emit_ref_confidence)])
+
         subprocess.run(cmd, check=True)
+
     return vcf, realigned_bam
 
 
@@ -54,6 +57,7 @@ def mark_duplicates(
     """mark_duplicates."""
     deduplicated_bam = BAMDirFmt()
     metrics = MetricsFile()
+
     for path, _ in sorted_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = [
             "gatk",
@@ -65,6 +69,7 @@ def mark_duplicates(
             "-O",
             os.path.join(str(deduplicated_bam), str(path.stem) + ".bam"),
         ]
+
         try:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
@@ -83,6 +88,7 @@ def add_replace_read_groups(
 ) -> BAMDirFmt:
     """add_replace_read_groups."""
     sorted_bam = BAMDirFmt()
+
     for path, _ in input_bam.bams.iter_views(view_type=BAMFormat):  # type: ignore
         cmd = [
             "gatk",
@@ -102,6 +108,7 @@ def add_replace_read_groups(
             "-SM",
             str(path.stem),
         ]
+
         try:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
@@ -118,6 +125,7 @@ def build_bam_index(
 ) -> BAMIndexAlignmentDirectory:
     """build_bam_index."""
     bam_index = BAMIndexAlignmentDirectory()
+
     for path, _ in coordinate_sorted_bam.bams.iter_views(view_type=BAMFormat):
         bam_path = os.path.join(str(coordinate_sorted_bam), str(path))
         cmd = [
@@ -130,30 +138,11 @@ def build_bam_index(
                 str(bam_index), Path(path).stem + ".bai"
             ),  # output formatting needs to change to work with new bamindexalignmentdirectoryformat attributes
         ]
+
         try:
             subprocess.run(cmd, check=True)
             shutil.copyfile(bam_path, os.path.join(str(bam_index), os.path.basename(bam_path)))
         except subprocess.CalledProcessError as e:
             raise ValidationError("An error occurred while running GATK BuildBamIndex: %s" % str(e))
+
     return bam_index
-
-
-def create_sequence_dictionary(
-    index_sequences: SamtoolsIndexSequencesDirectoryFormat,
-) -> IndexSequencesDirectoryFormat:
-    """create_sequence_dictionary."""
-    result = IndexSequencesDirectoryFormat()
-
-    cmd = [
-        "gatk",
-        "CreateSequenceDictionary",
-        "-R",
-        index_sequences.reference_fasta_filepath,
-        "-O",
-        os.path.abspath(os.path.join(str(result), "dna-sequences.dict")),
-    ]
-    subprocess.run(cmd, check=True)
-
-    shutil.copytree(str(index_sequences), str(result), dirs_exist_ok=True)
-
-    return result
