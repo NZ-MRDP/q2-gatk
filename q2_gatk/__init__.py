@@ -7,6 +7,6 @@ from ._gatk import (
     mark_duplicates,
 )
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 
 __all__ = ["haplotype_caller", "mark_duplicates", "add_replace_read_groups", "build_bam_index"]
