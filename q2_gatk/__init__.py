@@ -1,4 +1,4 @@
-"""gatk python library."""
+"""QIIME 2 plugin wrapping GATK variant-calling tools."""
 
 from ._gatk import (
     add_replace_read_groups,
